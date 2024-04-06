@@ -6,8 +6,8 @@ const { Client, IntentsBitField } = require('discord.js');
 const eventHandler = require('./handlers/eventHandler');
 
 //Api Imports
-const { set } = require('./api/POST/Commands');
-const { getBotGuilds } = require('./api/POST/utils')
+const { set, add_server } = require('./api/POST/Commands');
+const { getBotGuilds, get_guild_roles, get_guild_channels } = require('./api/POST/utils')
 
 const client = new Client({
   intents: [
@@ -19,6 +19,7 @@ const client = new Client({
   ],
 });
 
+//Handle Out Folders: [ Commands / Events ] Folders
 eventHandler(client);
 
 // Connecting To The API (Using Express)
@@ -29,14 +30,44 @@ const PORT = 3000;
 app.use(express.urlencoded({extended: true}));
 app.listen(PORT, () => console.log(`✔️ | API Connected! PORT: ${PORT}`));
 
-//Api Requests
+//Api Requests [ Commands ]
 app.post('/api/commands/set', async (req, res) => {
-  const { guild_id, role_id, role_name, channel_id} = await req.body;
-  await set(client, guild_id, role_id, role_name, channel_id, res);
+  const { button_name, role_id, channel_id, prefix_name} = await req.body;
+  await set(client, button_name ,role_id,  channel_id, prefix_name, res);
 });
 
+app.post('/api/commands/add-server', async (req, res) => {
+  try {
+    const { guild_name, guild_id, buyer_user_id, rent_expire_date } = await req.body;
+    await add_server(guild_name,guild_id,buyer_user_id,rent_expire_date,res);
+  } catch (error) {
+    res.status(404).json({sucess: false})
+    console.log(error)
+  }
+  
+});
+
+//Api Requests [ Bot ]
 app.post('/api/bot/get-guilds', async (req, res) => {
   await getBotGuilds(client, res);
+});
+
+app.post('/api/guild/get-roles', async (req, res) => {
+  try {
+    const { guild_id } = await req.body;
+    await get_guild_roles(client, guild_id, res);
+  } catch (error) {
+    console.log(error);
+  }
+});
+
+app.post('/api/guild/get-channels', async (req, res) => {
+  try {
+    const { guild_id } = await req.body;
+    await get_guild_channels(client, guild_id, res);
+  } catch (error) {
+    console.log(error);
+  }
 });
 
 // Connecting To The DataBase (MongoDB)
