@@ -2,6 +2,7 @@
 require('dotenv').config();
 const express = require('express')
 const mongoose = require('mongoose');
+const authoken = require('./api/Auth/authoken');
 const { Client, IntentsBitField } = require('discord.js');
 const eventHandler = require('./handlers/eventHandler');
 
@@ -32,19 +33,27 @@ app.listen(PORT, () => console.log(`✔️ | API Connected! PORT: ${PORT}`));
 
 //Api Requests [ Commands ]
 app.post('/api/commands/set', async (req, res) => {
-  const { button_name, role_id, channel_id, prefix_name} = await req.body;
+  //Get Data And Check
+  const { user_id, user_token, button_name, role_id, channel_id, prefix_name} = await req.body;
+  if(await authoken.checkUserToken(user_id, user_token) == false) return res.status(404).json({sucess: false});
+
   await set(client, button_name ,role_id,  channel_id, prefix_name, res);
 });
 
 app.post('/api/commands/add-server', async (req, res) => {
   try {
-    const { guild_name, guild_id, buyer_user_id, rent_expire_date } = await req.body;
+    //get data
+    const { user_id, user_token, guild_name, guild_id, buyer_user_id, rent_expire_date } = await req.body;
+    
+    //Check if user is administrator
+    const isAdmin = await authoken.checkUserType(user_id, user_token, 'admin');
+    if(!isAdmin) return res.status(404).json({sucess: false});
+
     await add_server(guild_name,guild_id,buyer_user_id,rent_expire_date,res);
   } catch (error) {
     res.status(404).json({sucess: false})
     console.log(error)
   }
-  
 });
 
 //Api Requests [ Bot ]
@@ -67,6 +76,18 @@ app.post('/api/guild/get-channels', async (req, res) => {
     await get_guild_channels(client, guild_id, res);
   } catch (error) {
     console.log(error);
+  }
+});
+
+//Api Requests [ Auth ]
+app.post('/api/auth/login', async (req, res) => {
+  try {
+    const {user_id} = await req.body;
+    const token = await authoken.getUserToken(user_id);
+    if(token == false) return res.status(400).json({sucess: false});
+    res.status(200).json({token});
+  } catch (error) {
+    res.status(404).json({sucess: false});
   }
 });
 
