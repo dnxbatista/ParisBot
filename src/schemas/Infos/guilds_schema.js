@@ -34,7 +34,12 @@ const guilds_schema = new Schema({
         required: false,
         default: null,
     },
-
+    //Rent Status
+    rent_status:{
+        type: Number,
+        required: false,
+        default: 1, //1 => Paying Rent | 0 => Not Paying Rent
+    },
     // Rent Expiration Date
     rent_expire_date:{
         type: Date,

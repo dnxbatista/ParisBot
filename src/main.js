@@ -7,7 +7,7 @@ const { Client, IntentsBitField } = require('discord.js');
 const eventHandler = require('./handlers/eventHandler');
 
 //Api Imports
-const { set, add_server } = require('./api/POST/Commands');
+const { set, add_server } = require('./api/POST/commands');
 const { getBotGuilds, get_guild_roles, get_guild_channels } = require('./api/POST/utils')
 
 const client = new Client({
@@ -34,10 +34,10 @@ app.listen(PORT, () => console.log(`✔️ | API Connected! PORT: ${PORT}`));
 //Api Requests [ Commands ]
 app.post('/api/commands/set', async (req, res) => {
   //Get Data And Check
-  const { user_id, user_token, button_name, role_id, channel_id, prefix_name} = await req.body;
+  const { user_id, user_token, buttons_data, selected_channel } = await req.body;
   if(await authoken.checkUserToken(user_id, user_token) == false) return res.status(404).json({sucess: false});
 
-  await set(client, button_name ,role_id,  channel_id, prefix_name, res);
+  await set(client, buttons_data, selected_channel, res);
 });
 
 app.post('/api/commands/add-server', async (req, res) => {
@@ -101,4 +101,5 @@ app.post('/api/auth/login', async (req, res) => {
   }
 })();
 
+//Turn Bot On And Connect To Discord
 client.login(process.env.TOKEN);
